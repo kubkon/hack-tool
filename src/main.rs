@@ -4,16 +4,16 @@ use std::io;
 type Tree<'a> = HashMap<&'a str, HashMap<usize, Vec<&'a str>>>;
 
 fn branches<'a>(words: &Vec<&'a str>) -> Tree<'a> {
-    let mut top_map = HashMap::with_capacity(words.len());
+    let mut tree = HashMap::with_capacity(words.len());
     let n = words[0].len();
     for &word in words {
-        let mut map = HashMap::with_capacity(n);
+        let mut branch = HashMap::with_capacity(n);
         for i in 0 .. n {
-            map.insert(i, Vec::new());
+            branch.insert(i, Vec::new());
         }
-        top_map.insert(word, map);
+        tree.insert(word, branch);
     }
-    for (k, v) in top_map.iter_mut(){
+    for (k, v) in tree.iter_mut(){
         for &word in words {
             if word.to_string() == k.to_string() {
                 continue;
@@ -23,17 +23,27 @@ fn branches<'a>(words: &Vec<&'a str>) -> Tree<'a> {
             v.get_mut(&like).unwrap().push(word);
         }
     }
-    top_map
+    tree
 }
 
 fn recommend<'a>(tree: &Tree<'a>) -> Vec<&'a str> {
     let mut counts = Vec::new();
     for (k, v) in tree.iter() {
-        let count = (k, v.iter().fold(0, |acc, (&i, ref w)| if i > 0 {acc + w.len()} else {acc} )); 
+        let count = (k, v.iter().fold(0, |acc, (&i, ref w)| {
+            if i > 0 {
+                acc + w.len()
+            } else {
+                acc
+            }
+        })); 
         counts.push(count);
     }
     let max = counts.iter().map(|&(_, v)| v).max().unwrap();
-    counts.iter().filter(|&&(_, v)| v == max).map(|&(k, _)| k).cloned().collect()
+    counts.iter()
+          .filter(|&&(_, v)| v == max)
+          .map(|&(k, _)| k)
+          .cloned()
+          .collect()
 }
 
 fn likeness(word1: &str, word2: &str) -> usize {
