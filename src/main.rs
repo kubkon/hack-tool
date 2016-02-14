@@ -72,17 +72,17 @@ fn main() {
     ];
     // compute all branches
     let mut tree = branches(&words);
-    println!("Recommended picks: {:#?}", recommend(&tree));
 
     loop {
+        println!("Recommended picks: {:#?}", recommend(&tree));
         // user input
         let mut input = String::new();
         io::stdin().read_line(&mut input);
         let parsed: Vec<&str> = input.trim().split_whitespace().collect();
         let word = parsed.get(0).unwrap();
         let like = parsed.get(1).unwrap().parse::<usize>().unwrap();
+        // recompute branches based on user input
         tree = branches(tree.get(word).unwrap().get(&like).unwrap());
-        println!("Recommended picks: {:#?}", recommend(&tree));
     }
 }
 
