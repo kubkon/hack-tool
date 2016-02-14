@@ -1,5 +1,20 @@
+#![feature(plugin)]
+#![plugin(docopt_macros)]
+
+extern crate rustc_serialize;
+extern crate docopt;
+
 use std::collections::HashMap;
 use std::io;
+
+docopt!(Args derive Debug, "
+HACK
+
+Usage:
+    hack <words>...
+    hack (-h | --help)
+    hack --version
+");
 
 type Tree<'a> = HashMap<&'a str, HashMap<usize, Vec<&'a str>>>;
 
@@ -53,23 +68,8 @@ fn likeness(word1: &str, word2: &str) -> usize {
 }
 
 fn main() {
-    let words = vec![
-        "hates",
-        "unite",
-        "dried",
-        "thief",
-        "jokes",
-        "dazed",
-        "early",
-        "laser",
-        "basic",
-        "grief",
-        "noted",
-        "harsh",
-        "claim",
-        "crime",
-        "slide"
-    ];
+    let args: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
+    let words: Vec<&str> = args.arg_words.iter().map(|s| s.as_str()).collect();
     // compute all branches
     let mut tree = branches(&words);
 
