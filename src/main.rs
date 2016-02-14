@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::io;
 
-fn routes<'a>(words: &Vec<&'a str>) -> HashMap<&'a str, HashMap<usize, Vec<&'a str>>> {
+type Tree<'a> = HashMap<&'a str, HashMap<usize, Vec<&'a str>>>;
+
+fn branches<'a>(words: &Vec<&'a str>) -> Tree<'a> {
     let mut top_map = HashMap::with_capacity(words.len());
     let n = words[0].len();
     for &word in words {
@@ -22,6 +24,16 @@ fn routes<'a>(words: &Vec<&'a str>) -> HashMap<&'a str, HashMap<usize, Vec<&'a s
         }
     }
     top_map
+}
+
+fn recommend<'a>(tree: &Tree<'a>) -> Vec<&'a str> {
+    let mut counts = Vec::new();
+    for (k, v) in tree.iter() {
+        let count = (k, v.iter().fold(0, |acc, (&i, ref w)| if i > 0 {acc + w.len()} else {acc} )); 
+        counts.push(count);
+    }
+    let max = counts.iter().map(|&(_, v)| v).max().unwrap();
+    counts.iter().filter(|&&(_, v)| v == max).map(|&(k, _)| k).cloned().collect()
 }
 
 fn likeness(word1: &str, word2: &str) -> usize {
@@ -48,20 +60,19 @@ fn main() {
         "crime",
         "slide"
     ];
-    // compute all routes
-    let mut r = routes(&words);
-    println!("Pick from: {:#?}", r.keys().collect::<Vec<&&str>>());
+    // compute all branches
+    let mut tree = branches(&words);
+    println!("Recommended picks: {:#?}", recommend(&tree));
 
     loop {
         // user input
         let mut input = String::new();
         io::stdin().read_line(&mut input);
-        let input: Vec<&str> = input.trim().split_whitespace().collect();
-        let word = input.get(0).unwrap();
-        let like = input.get(1).unwrap().parse::<usize>().unwrap();
-        // user selected "hates" and received likeness 2
-        r = routes(r.get(word).unwrap().get(&like).unwrap());
-        println!("Pick from: {:#?}", r.keys().collect::<Vec<&&str>>());
+        let parsed: Vec<&str> = input.trim().split_whitespace().collect();
+        let word = parsed.get(0).unwrap();
+        let like = parsed.get(1).unwrap().parse::<usize>().unwrap();
+        tree = branches(tree.get(word).unwrap().get(&like).unwrap());
+        println!("Recommended picks: {:#?}", recommend(&tree));
     }
 }
 
