@@ -7,6 +7,7 @@ extern crate docopt;
 mod tree;
 
 use std::io;
+use tree::Tree;
 
 docopt!(Args derive Debug, "
 HACK is a simple utility that helps you solve those 'difficult' hacking
@@ -22,11 +23,11 @@ fn main() {
     let args: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
     let words: Vec<&str> = args.arg_words.iter().map(|s| s.as_str()).collect();
     // compute all branches
-    let mut tree = tree::branches(&words);
+    let mut tree = Tree::new(&words);
 
     loop {
-        println!("Recommended picks: {:#?}", tree::recommend(&tree));
-        if tree::empty(&tree) {
+        println!("Recommended picks: {:#?}", tree.recommend());
+        if tree.empty() {
             break;
         };
         // user input
@@ -41,7 +42,7 @@ fn main() {
             (Some(w), Some(l)) => (w, l.parse::<usize>().unwrap()),
         };
         // recompute branches based on user input
-        tree = tree::branches(tree.get(word).unwrap().get(&like).unwrap());
+        tree = Tree::new(tree.branches.get(word).unwrap().get(&like).unwrap());
     }
 }
 

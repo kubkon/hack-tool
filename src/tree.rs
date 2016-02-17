@@ -1,54 +1,59 @@
 use std::collections::HashMap;
 
-pub type Tree<'a> = HashMap<&'a str, HashMap<usize, Vec<&'a str>>>;
+pub struct Tree<'a> {
+    pub branches: HashMap<&'a str, HashMap<usize, Vec<&'a str>>>
+}
 
-pub fn branches<'a>(words: &Vec<&'a str>) -> Tree<'a> {
-    let mut tree = HashMap::with_capacity(words.len());
-    let n = words[0].len();
-    for &word in words {
-        let mut branch = HashMap::with_capacity(n);
-        for i in 0 .. n {
-            branch.insert(i, Vec::new());
-        }
-        tree.insert(word, branch);
-    }
-    for (k, v) in tree.iter_mut(){
+impl<'a> Tree<'a> {
+    pub fn new(words: &Vec<&'a str>) -> Tree<'a> {
+        let mut branches = HashMap::with_capacity(words.len());
+        let n = words[0].len();
         for &word in words {
-            if word.to_string() == k.to_string() {
-                continue;
+            let mut branch = HashMap::with_capacity(n);
+            for i in 0 .. n {
+                branch.insert(i, Vec::new());
             }
-
-            let like = likeness(k, word);
-            v.get_mut(&like).unwrap().push(word);
+            branches.insert(word, branch);
         }
-    }
-    tree
-}
+        for (k, v) in branches.iter_mut(){
+            for &word in words {
+                if word.to_string() == k.to_string() {
+                    continue;
+                }
 
-pub fn recommend<'a>(tree: &Tree<'a>) -> Vec<&'a str> {
-    let mut counts = Vec::new();
-    for (k, v) in tree.iter() {
-        let count = (k, v.iter().fold(0, |acc, (&i, ref w)| {
-            if i > 0 {
-                acc + w.len()
-            } else {
-                acc
+                let like = likeness(k, word);
+                v.get_mut(&like).unwrap().push(word);
             }
-        })); 
-        counts.push(count);
+        }
+        Tree { branches: branches }
     }
-    let max = counts.iter().map(|&(_, v)| v).max().unwrap();
-    counts.iter()
-          .filter(|&&(_, v)| v == max)
-          .map(|&(k, _)| k)
-          .cloned()
-          .collect()
-}
 
-pub fn empty<'a>(tree: &Tree<'a>) -> bool {
-    tree.values()
-        .map(|v| v.iter().fold(0, |acc, (_, ref w)| acc + w.len()))
-        .all(|x| x == 0)
+    pub fn recommend(&'a self) -> Vec<&'a str> {
+        let mut counts = Vec::new();
+        for (k, v) in self.branches.iter() {
+            let count = (k, v.iter().fold(0, |acc, (&i, ref w)| {
+                if i > 0 {
+                    acc + w.len()
+                } else {
+                    acc
+                }
+            })); 
+            counts.push(count);
+        }
+        let max = counts.iter().map(|&(_, v)| v).max().unwrap();
+        counts.iter()
+              .filter(|&&(_, v)| v == max)
+              .map(|&(k, _)| k)
+              .cloned()
+              .collect()
+    }
+
+    pub fn empty(&'a self) -> bool {
+        self.branches
+            .values()
+            .map(|v| v.iter().fold(0, |acc, (_, ref w)| acc + w.len()))
+            .all(|x| x == 0)
+    }
 }
 
 fn likeness(word1: &str, word2: &str) -> usize {
