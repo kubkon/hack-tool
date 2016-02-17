@@ -61,6 +61,21 @@ fn recommend<'a>(tree: &Tree<'a>) -> Vec<&'a str> {
           .collect()
 }
 
+fn empty<'a>(tree: &Tree<'a>) -> bool {
+    let mut counts = Vec::new();
+    for (_, v) in tree.iter() {
+        let count = v.iter().fold(0, |acc, (&i, ref w)| {
+            if i > 0 {
+                acc + w.len()
+            } else {
+                acc
+            }
+        }); 
+        counts.push(count);
+    }
+    counts.iter().all(|&x| x == 0)
+}
+
 fn likeness(word1: &str, word2: &str) -> usize {
     word1.chars().zip(word2.chars())
                  .filter(|&(c1, c2)| c1 == c2)
@@ -75,7 +90,9 @@ fn main() {
 
     loop {
         println!("Recommended picks: {:#?}", recommend(&tree));
-        println!("{:#?}", tree);
+        if empty(&tree) {
+            break;
+        };
         // user input
         let mut input = String::new();
         io::stdin().read_line(&mut input);
