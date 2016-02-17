@@ -75,12 +75,18 @@ fn main() {
 
     loop {
         println!("Recommended picks: {:#?}", recommend(&tree));
+        println!("{:#?}", tree);
         // user input
         let mut input = String::new();
         io::stdin().read_line(&mut input);
         let parsed: Vec<&str> = input.trim().split_whitespace().collect();
-        let word = parsed.get(0).unwrap();
-        let like = parsed.get(1).unwrap().parse::<usize>().unwrap();
+        let (word, like) = match (parsed.get(0), parsed.get(1)) {
+            (None, _) | (_, None) => {
+                println!("You need to specify the word followed by likeness");
+                continue;
+            },
+            (Some(w), Some(l)) => (w, l.parse::<usize>().unwrap()),
+        };
         // recompute branches based on user input
         tree = branches(tree.get(word).unwrap().get(&like).unwrap());
     }
